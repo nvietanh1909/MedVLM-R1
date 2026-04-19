@@ -1,47 +1,10 @@
-# Medical Vision-Language Model Fine-Tuning Pipeline
-
-This project implements a complete two-stage fine-tuning pipeline for Vision-Language Models (specifically Qwen3.5-2B) on medical datasets (PubMedVision), focusing on creating a model with reasoning capabilities (Thinking Mode) via Group Relative Policy Optimization (GRPO).
-
-## Project Structure
-
-```text
-finetune/
-├── configs/
-│   ├── qwen3.5-2b_pubmedvision.yaml            # Config for Stage 1: SFT
-│   └── qwen3.5-2b_pubmedvision_grpo.yaml       # Config for Stage 2: GRPO
-├── src/
-│   ├── data/
-│   │   ├── pubmedvision.py                     # SFT dataset loader
-│   │   ├── pubmedvision_grpo.py                # GRPO dataset loader
-│   │   └── registry.py                         # Dataset registry
-│   ├── models/
-│   │   └── loader.py                           # Smart Model + LoRA adapter loader
-│   ├── rewards/                                # GRPO Reward Functions
-│   │   ├── format_reward.py                    # Ensures <think> and <answer> tags
-│   │   ├── correctness_reward.py               # ROUGE-L scoring against Ground Truth
-│   │   ├── semantic_reward.py                  # Cosine Similarity using SentenceTransformers
-│   │   ├── medical_entity_reward.py            # Validates correct Modality and Body Part
-│   │   └── quality_reward.py                   # Length penalty and Anti-hallucination
-│   ├── training/
-│   │   ├── trainer.py                          # SFTTrainer builder
-│   │   └── grpo_trainer.py                     # GRPOTrainer builder
-│   └── prompts.py                              # System prompts governing Thinking Mode
-├── scripts/
-│   ├── train.py                                # Entry point for SFT
-│   ├── train_grpo.py                           # Entry point for GRPO
-│   ├── evaluate.py                             # Evaluation script
-│   └── infer.py                                # Interactive inference
-├── run_sft.slurm                               # SLURM script for Stage 1
-└── run_grpo.slurm                              # SLURM script for Stage 2
-```
+# Medical Model Fine-Tuning Pipeline
 
 ## Setup and Installation
 
 Install the required libraries. If you are behind a proxy, remember to bypass it if necessary.
 
 ```bash
-pip install unsloth transformers==5.3.0
-pip install --no-deps trl==0.22.2
 pip install -r requirements.txt
 ```
 
