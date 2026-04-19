@@ -11,3 +11,6 @@ pyyaml
 sentencepiece
 protobuf
 tqdm
+rouge-score
+sentence-transformers
+datasets

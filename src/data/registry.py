@@ -1,7 +1,9 @@
 from src.data.pubmedvision import PubMedVisionDataset
+from src.data.pubmedvision_grpo import PubMedVisionGRPO
 
 DATASET_REGISTRY = {
     "pubmedvision": PubMedVisionDataset,
+    "pubmedvision_grpo": PubMedVisionGRPO,
 }
 
 
