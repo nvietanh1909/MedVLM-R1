@@ -37,7 +37,7 @@ training:
   weight_decay: 0.001
   lr_scheduler_type: cosine
   seed: 3407
-  max_length: 8192
+  max_length: 4096
   bf16: true
   fp16: false
   dataloader_num_workers: 0
