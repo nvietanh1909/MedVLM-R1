@@ -27,19 +27,27 @@ class PubMedVisionDataset(BaseVisionDataset):
         return images
 
     def __getitem__(self, idx: int) -> dict:
-        sample = self.data[idx]
-        images = self._load_images(sample.get("image", []))
-        conversations = sample["conversations"]
+        try:
+            sample = self.data[idx]
+            images = self._load_images(sample.get("image", []))
+            conversations = sample["conversations"]
 
-        messages = []
-        for i in range(0, len(conversations), 2):
-            human = conversations[i]
-            gpt = conversations[i + 1]
+            messages = []
+            for i in range(0, len(conversations), 2):
+                human = conversations[i]
+                gpt = conversations[i + 1]
 
-            user_content = [{"type": "image", "image": img} for img in images]
-            user_content.append({"type": "text", "text": human["value"]})
+                user_content = [{"type": "image", "image": img} for img in images]
+                user_content.append({"type": "text", "text": human["value"]})
 
-            messages.append({"role": "user", "content": user_content})
-            messages.append({"role": "assistant", "content": [{"type": "text", "text": gpt["value"]}]})
+                messages.append({"role": "user", "content": user_content})
+                messages.append({"role": "assistant", "content": [{"type": "text", "text": gpt["value"]}]})
 
-        return {"messages": messages}
+            if len(messages) == 0:
+                raise ValueError("No valid messages created.")
+
+            return {"messages": messages}
+        except Exception as e:
+            print(f"Warning: Skipping sample at index {idx} due to error: {e}")
+            next_idx = (idx + 1) % len(self.data)
+            return self.__getitem__(next_idx)
