@@ -59,5 +59,6 @@ class PubMedVisionDataset(BaseVisionDataset):
 
             return {"messages": messages}
         except Exception as e:
+            print(f"Warning: Skipping sample at index {idx} due to error: {e}")
             next_idx = (idx + 1) % len(self.data)
             return self.__getitem__(next_idx)
