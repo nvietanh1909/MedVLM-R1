@@ -4,6 +4,7 @@ REWARD_REGISTRY = {
     "semantic": "src.rewards.semantic_reward.SemanticReward",
     "medical_entity": "src.rewards.medical_entity_reward.MedicalEntityReward",
     "quality": "src.rewards.quality_reward.QualityReward",
+    "medical_judge": "src.rewards.medical_judge.MedicalJudgeReward",
 }
 
 

@@ -1,5 +1,5 @@
 from src.rewards.utils import extract_content
-
+import re
 
 class MedicalEntityReward:
     MODALITY_VARIANTS = {
@@ -7,7 +7,7 @@ class MedicalEntityReward:
         "magnetic resonance imaging": ["mri", "magnetic resonance", "mr imaging", "mr scan"],
         "x-ray": ["x-ray", "xray", "radiograph", "plain film"],
         "ultrasound": ["ultrasound", "ultrasonography", "sonography"],
-        "digital photography": ["photograph", "clinical photo", "image"],
+        "digital photography": ["photograph", "clinical photo"],
         "microscopy images": ["microscopy", "histolog", "pathology", "biopsy", "cytolog"],
         "endoscopy": ["endoscop", "colonoscop", "gastroscop"],
         "mammography": ["mammogra", "breast imaging"],
@@ -15,11 +15,6 @@ class MedicalEntityReward:
         "angiography": ["angiogra", "arteriogra"],
         "dermoscopy": ["dermoscop", "dermatoscop"],
         "fundus photography": ["fundus", "retinal", "optic disc", "fundoscop"],
-        "optical coherence tomography": ["oct", "optical coherence"],
-        "pet": ["pet", "positron emission"],
-        "ecg": ["ecg", "electrocardiogra", "ekg"],
-        "brain imaging": ["brain", "cerebral", "neural", "neuro"],
-        "infrared reflectance imaging": ["infrared", "reflectance", "ir imaging"],
         "others": [],
     }
 
@@ -35,16 +30,9 @@ class MedicalEntityReward:
         "eye": ["eye", "retina", "optic", "ocular", "cornea", "macula"],
         "skin": ["skin", "dermat", "cutaneous", "melanom", "epiderm"],
         "head": ["head", "skull", "facial", "sinus", "orbit"],
-        "cell": ["cell", "cellular", "tissue", "cytolog", "histolog"],
         "extremity": ["extremit", "hand", "foot", "wrist", "ankle", "elbow", "shoulder"],
         "vascular": ["vascular", "artery", "vein", "vessel", "thromb", "embol"],
-        "foot": ["foot", "feet", "ankle", "toe", "plantar", "calcaneus"],
-        "lower limb": ["lower limb", "leg", "thigh", "knee", "femur", "tibia", "fibula"],
-        "upper limb": ["upper limb", "arm", "forearm", "wrist", "humerus", "radius", "ulna"],
-        "pelvic cavity": ["pelvi", "bladder", "prostat", "uter", "ovari", "cervi", "sacr"],
-        "oral cavity": ["oral", "mouth", "tongue", "teeth", "dental", "gingiv", "palat"],
         "gastrointestinal tract": ["gastrointestin", "stomach", "bowel", "colon", "esophag", "duoden", "rectum", "intestin"],
-        "computed tomography": ["ct", "computed tomography"],
         "others": [],
     }
 
@@ -59,16 +47,26 @@ class MedicalEntityReward:
         for completion, mod, bp in zip(completions, modalities, body_parts):
             score = 0.0
             text_lower = extract_content(completion).lower()
-
+            
             if mod:
-                variants = self.MODALITY_VARIANTS.get(mod.lower(), [mod.lower()])
-                if variants and any(v in text_lower for v in variants):
+                mod_lower = mod.lower()
+                correct_variants = self.MODALITY_VARIANTS.get(mod_lower, [mod_lower])
+                if any(re.search(r"\b" + re.escape(v) + r"\b", text_lower) for v in correct_variants):
                     score += 0.5
+                
+                for other_mod, variants in self.MODALITY_VARIANTS.items():
+                    if other_mod != mod_lower and any(re.search(r"\b" + re.escape(v) + r"\b", text_lower) for v in variants):
+                        score -= 0.5 
 
             if bp:
-                variants = self.BODY_PART_VARIANTS.get(bp.lower(), [bp.lower()])
-                if variants and any(v in text_lower for v in variants):
+                bp_lower = bp.lower()
+                correct_variants = self.BODY_PART_VARIANTS.get(bp_lower, [bp_lower])
+                if any(re.search(r"\b" + re.escape(v) + r"\b", text_lower) for v in correct_variants):
                     score += 0.5
+                
+                for other_bp, variants in self.BODY_PART_VARIANTS.items():
+                    if other_bp != bp_lower and any(re.search(r"\b" + re.escape(v) + r"\b", text_lower) for v in variants):
+                        score -= 0.5
 
             rewards.append(score)
         return rewards

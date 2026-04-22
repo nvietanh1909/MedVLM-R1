@@ -1,6 +1,6 @@
 model:
   name: qwen3.5-2b_pubmedvision_grpo
-  model_path: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/outputs/qwen3.5-2b_pubmedvision
+  model_path: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/outputs/qwen3.5-2b_pubmedvision/checkpoint-9518
   load_in_4bit: false
   use_gradient_checkpointing: "unsloth"
 
@@ -24,12 +24,8 @@ dataset:
 
 rewards:
   enabled:
-    - format
-    - correctness
-    - semantic
-    - medical_entity
-    - quality
-  semantic_model: all-MiniLM-L6-v2
+    - medical_judge
+  semantic_model: pritamdeka/S-PubMedBert-MS-MARCO
 
 grpo:
   num_generations: 8
