@@ -1,4 +1,31 @@
-dataset*
-models/*
+# Datasets and Models
+dataset/
+models/
+outputs/
+logs/
+*.tar.gz
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Unsloth
+unsloth_compiled_cache/
+
+# OS
 .DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Environment
+.env

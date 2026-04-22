@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--config", type=str, required=True, help="Path to YAML config file")
     parser.add_argument("--max_steps", type=int, default=None, help="Override max_steps from config")
     parser.add_argument("--max_samples", type=int, default=None, help="Override max_samples for quick testing")
+    parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume from (or 'True' for latest)")
     return parser.parse_args()
 
 
@@ -51,11 +52,16 @@ def main():
     logger.info(f"GPU: {gpu_stats.name} | Total VRAM: {round(gpu_stats.total_memory / 1024**3, 2)} GB")
     logger.info(f"Memory reserved before training: {start_mem} GB")
 
-    trainer_stats = trainer.train()
-
-    used_mem = round(torch.cuda.max_memory_reserved() / 1024**3, 3)
-    runtime_min = round(trainer_stats.metrics["train_runtime"] / 60, 2)
-    logger.info(f"Training complete — {runtime_min} minutes | Peak VRAM: {used_mem} GB")
+    try:
+        resume_from = args.resume
+        if resume_from == "True":
+            resume_from = True
+        trainer_stats = trainer.train(resume_from_checkpoint=resume_from)
+    except Exception as e:
+        logger.error(f"Training interrupted: {e}")
+        model.save_pretrained(cfg["training"]["output_dir"])
+        tokenizer.save_pretrained(cfg["training"]["output_dir"])
+        sys.exit(1)
 
     output_dir = cfg["training"]["output_dir"]
     model.save_pretrained(output_dir)

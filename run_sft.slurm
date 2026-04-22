@@ -10,5 +10,5 @@
 export WANDB_DISABLED=true
 
 echo "Starting Supervised Fine-Tuning (SFT)..."
-python scripts/train.py --config configs/qwen3.5-2b_pubmedvision.yaml
+python scripts/train.py --config configs/qwen3.5-2b_pubmedvision.yaml --resume True
 echo "SFT completed."
