@@ -1,6 +1,6 @@
 model:
   name: qwen3.5-2b_pubmedvision_grpo
-  model_path: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/outputs/qwen3.5-2b_pubmedvision
+  model_path: outputs/qwen3.5-2b_pubmedvision/checkpoint-9518
   load_in_4bit: false
   use_gradient_checkpointing: "unsloth"
 
@@ -18,35 +18,32 @@ lora:
 
 dataset:
   type: pubmedvision_grpo
-  data_path: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/dataset/PubMedVision
+  data_path: dataset/PubMedVision
   json_file: PubMedVision_InstructionTuning_VQA.json
-  max_samples: null
+  max_samples: 8000
 
 rewards:
   enabled:
-    - format
-    - correctness
-    - semantic
-    - medical_entity
-    - quality
-  semantic_model: all-MiniLM-L6-v2
+    - medical_judge
+  semantic_model: models/S-PubMedBert-MS-MARCO
 
 grpo:
   num_generations: 8
-  max_prompt_length: 1024
+  max_prompt_length: 512
   max_completion_length: 512
-  beta: 0.001
-  temperature: 0.7
+  beta: 0.01
+  temperature: 0.9
+  top_p: 0.95
   learning_rate: 5e-6
   num_train_epochs: 1
   max_steps: -1
-  per_device_train_batch_size: 4
-  gradient_accumulation_steps: 4
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 8
   warmup_steps: 50
   logging_steps: 5
   save_steps: 100
   save_total_limit: 3
-  output_dir: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/outputs/qwen3.5-2b_pubmedvision_grpo
+  output_dir: outputs/qwen3.5-2b_pubmedvision_grpo
   optim: adamw_8bit
   bf16: true
   fp16: false

@@ -1,5 +1,5 @@
 from src.rewards.utils import extract_content
-
+import re
 
 class MedicalEntityReward:
     MODALITY_VARIANTS = {
@@ -7,7 +7,7 @@ class MedicalEntityReward:
         "magnetic resonance imaging": ["mri", "magnetic resonance", "mr imaging", "mr scan"],
         "x-ray": ["x-ray", "xray", "radiograph", "plain film"],
         "ultrasound": ["ultrasound", "ultrasonography", "sonography"],
-        "digital photography": ["photograph", "clinical photo", "image"],
+        "digital photography": ["photograph", "clinical photo"],
         "microscopy images": ["microscopy", "histolog", "pathology", "biopsy", "cytolog"],
         "endoscopy": ["endoscop", "colonoscop", "gastroscop"],
         "mammography": ["mammogra", "breast imaging"],
@@ -15,11 +15,8 @@ class MedicalEntityReward:
         "angiography": ["angiogra", "arteriogra"],
         "dermoscopy": ["dermoscop", "dermatoscop"],
         "fundus photography": ["fundus", "retinal", "optic disc", "fundoscop"],
+        "infrared reflectance imaging": ["infrared", "reflectance"],
         "optical coherence tomography": ["oct", "optical coherence"],
-        "pet": ["pet", "positron emission"],
-        "ecg": ["ecg", "electrocardiogra", "ekg"],
-        "brain imaging": ["brain", "cerebral", "neural", "neuro"],
-        "infrared reflectance imaging": ["infrared", "reflectance", "ir imaging"],
         "others": [],
     }
 
@@ -31,20 +28,19 @@ class MedicalEntityReward:
         "breast": ["breast", "mammograph"],
         "heart": ["heart", "cardiac", "coronary", "myocard", "aort", "valv"],
         "pelvis": ["pelvi", "bladder", "prostat", "uter", "ovari", "cervi"],
+        "pelvic cavity": ["pelvi", "bladder", "prostat", "uter", "ovari", "cervi"],
         "neck": ["neck", "thyroid", "cervical", "laryn", "pharyn"],
         "eye": ["eye", "retina", "optic", "ocular", "cornea", "macula"],
         "skin": ["skin", "dermat", "cutaneous", "melanom", "epiderm"],
         "head": ["head", "skull", "facial", "sinus", "orbit"],
-        "cell": ["cell", "cellular", "tissue", "cytolog", "histolog"],
-        "extremity": ["extremit", "hand", "foot", "wrist", "ankle", "elbow", "shoulder"],
+        "extremity": ["extremit", "hand", "foot", "wrist", "ankle", "elbow", "shoulder", "limb"],
+        "upper limb": ["upper limb", "arm", "hand", "wrist", "elbow", "shoulder", "humer"],
+        "lower limb": ["lower limb", "leg", "foot", "ankle", "knee", "femur", "tibia"],
+        "foot": ["foot", "ankle", "toe", "plantar", "calcaneus"],
+        "oral cavity": ["oral", "mouth", "tongue", "dental", "tooth", "teeth", "gingiv", "palate"],
+        "cell": ["cell", "cellular", "cytolog", "histolog"],
         "vascular": ["vascular", "artery", "vein", "vessel", "thromb", "embol"],
-        "foot": ["foot", "feet", "ankle", "toe", "plantar", "calcaneus"],
-        "lower limb": ["lower limb", "leg", "thigh", "knee", "femur", "tibia", "fibula"],
-        "upper limb": ["upper limb", "arm", "forearm", "wrist", "humerus", "radius", "ulna"],
-        "pelvic cavity": ["pelvi", "bladder", "prostat", "uter", "ovari", "cervi", "sacr"],
-        "oral cavity": ["oral", "mouth", "tongue", "teeth", "dental", "gingiv", "palat"],
         "gastrointestinal tract": ["gastrointestin", "stomach", "bowel", "colon", "esophag", "duoden", "rectum", "intestin"],
-        "computed tomography": ["ct", "computed tomography"],
         "others": [],
     }
 
@@ -61,14 +57,16 @@ class MedicalEntityReward:
             text_lower = extract_content(completion).lower()
 
             if mod:
-                variants = self.MODALITY_VARIANTS.get(mod.lower(), [mod.lower()])
-                if variants and any(v in text_lower for v in variants):
-                    score += 0.5
+                mod_lower = mod.lower()
+                correct_variants = self.MODALITY_VARIANTS.get(mod_lower, [mod_lower])
+                if correct_variants and any(v in text_lower for v in correct_variants):
+                    score += 1.0
 
             if bp:
-                variants = self.BODY_PART_VARIANTS.get(bp.lower(), [bp.lower()])
-                if variants and any(v in text_lower for v in variants):
-                    score += 0.5
+                bp_lower = bp.lower()
+                correct_variants = self.BODY_PART_VARIANTS.get(bp_lower, [bp_lower])
+                if correct_variants and any(v in text_lower for v in correct_variants):
+                    score += 1.0
 
             rewards.append(score)
         return rewards
