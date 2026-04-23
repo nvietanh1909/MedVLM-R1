@@ -1,6 +1,6 @@
 model:
   name: qwen3.5-2b_pubmedvision
-  model_path: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/models/Qwen3.5-2B
+  model_path: models/Qwen3.5-2B
   load_in_4bit: false
   use_gradient_checkpointing: "unsloth"
 
@@ -18,12 +18,12 @@ lora:
 
 dataset:
   type: pubmedvision
-  data_path: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/dataset/PubMedVision
+  data_path: dataset/PubMedVision
   json_file: PubMedVision_InstructionTuning_VQA.json
   max_samples: null
 
 training:
-  output_dir: /data2/cmdir/home/ioit_thql/ducanhUET/finetune/outputs/qwen3.5-2b_pubmedvision
+  output_dir: outputs/qwen3.5-2b_pubmedvision
   per_device_train_batch_size: 8
   gradient_accumulation_steps: 8
   warmup_steps: 100

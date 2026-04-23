@@ -11,18 +11,18 @@ class QualityReward:
         for completion in completions:
             clean = extract_content(completion).strip()
 
-            if len(clean) < self.MIN_LENGTH:
-                score = -1.0
-            elif len(clean) > self.MAX_LENGTH:
-                score = -0.5
+            if len(clean) < 100:
+                score = -0.1
+            elif len(clean) > 1000:
+                score = -0.1
             else:
-                score = 0.5
+                score = 0.2
 
             words = clean.split()
             if len(words) > 10:
                 unique_ratio = len(set(words)) / len(words)
                 if unique_ratio < self.MIN_UNIQUE_RATIO:
-                    score = -1.0
+                    score = -0.5
 
             rewards.append(score)
         return rewards

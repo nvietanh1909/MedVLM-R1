@@ -4,6 +4,7 @@ REWARD_REGISTRY = {
     "semantic": "src.rewards.semantic_reward.SemanticReward",
     "medical_entity": "src.rewards.medical_entity_reward.MedicalEntityReward",
     "quality": "src.rewards.quality_reward.QualityReward",
+    "medical_judge": "src.rewards.medical_judge.MedicalJudgeReward",
 }
 
 
@@ -27,8 +28,11 @@ def get_reward_funcs(cfg):
         cls = _import_class(REWARD_REGISTRY[name])
         if name == "semantic":
             model_name = reward_cfg.get("semantic_model", "all-MiniLM-L6-v2")
-            funcs.append(cls(model_name=model_name))
+            instance = cls(model_name=model_name)
         else:
-            funcs.append(cls())
+            instance = cls()
+        
+        instance.__name__ = cls.__name__
+        funcs.append(instance)
 
     return funcs
