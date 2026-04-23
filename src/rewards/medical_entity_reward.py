@@ -55,7 +55,7 @@ class MedicalEntityReward:
         for completion, mod, bp in zip(completions, modalities, body_parts):
             score = 0.0
             text_lower = extract_content(completion).lower()
-
+            
             if mod:
                 mod_lower = mod.lower()
                 correct_variants = self.MODALITY_VARIANTS.get(mod_lower, [mod_lower])
