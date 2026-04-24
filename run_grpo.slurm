@@ -8,6 +8,7 @@
 #SBATCH --output="logs/slurm-%j-%x.log"
 
 export WANDB_DISABLED=true
+export PYTHONUNBUFFERED=1
 
 echo "Starting GRPO Training..."
 python scripts/train_grpo.py --config configs/qwen3.5-2b_pubmedvision_grpo.yaml
