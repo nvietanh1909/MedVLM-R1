@@ -18,6 +18,6 @@ class FormatReward:
 
             think_match = re.search(self.THINK_PATTERN, text)
             think_len = len(think_match.group(1).strip()) if think_match else 0
-            rewards.append(1.0 if think_len >= self.MIN_THINKING_LENGTH else 0.5)
+            rewards.append(0.2 if think_len >= self.MIN_THINKING_LENGTH else 0.1)
 
         return rewards
