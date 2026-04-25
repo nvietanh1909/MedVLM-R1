@@ -4,6 +4,9 @@ import sys
 
 import torch
 import yaml
+import warnings
+import unsloth
+import transformers
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -38,13 +41,15 @@ def main():
     cfg["grpo"]["learning_rate"] = float(cfg["grpo"]["learning_rate"])
 
     logger.info(f"Config: {args.config}")
-    logger.info(f"Model: {cfg['model']['model_path']}")
-    logger.info(f"Dataset: {cfg['dataset']['type']} — {cfg['dataset']['json_file']}")
+    model_loc = cfg['model'].get('path', cfg['model'].get('model_path', 'unknown'))
+    logger.info(f"Model: {model_loc}")
+    ds_loc = cfg['dataset'].get('path', cfg['dataset'].get('json_file', 'unknown'))
+    logger.info(f"Dataset: {cfg['dataset']['type']} — {ds_loc}")
     logger.info(f"Output: {cfg['grpo']['output_dir']}")
 
     model, tokenizer = load_model(cfg)
 
-    dataset = get_dataset(cfg)
+    dataset = get_dataset(cfg, tokenizer)
     logger.info(f"Dataset loaded: {len(dataset)} samples")
 
     reward_funcs = get_reward_funcs(cfg)
