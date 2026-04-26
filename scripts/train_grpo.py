@@ -4,6 +4,9 @@ import sys
 
 import torch
 import yaml
+import warnings
+import unsloth
+import transformers
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -38,13 +41,15 @@ def main():
     cfg["grpo"]["learning_rate"] = float(cfg["grpo"]["learning_rate"])
 
     logger.info(f"Config: {args.config}")
-    logger.info(f"Model: {cfg['model']['model_path']}")
-    logger.info(f"Dataset: {cfg['dataset']['type']} — {cfg['dataset']['json_file']}")
+    model_loc = cfg['model'].get('path', cfg['model'].get('model_path', 'unknown'))
+    logger.info(f"Model: {model_loc}")
+    ds_loc = cfg['dataset'].get('path', cfg['dataset'].get('json_file', 'unknown'))
+    logger.info(f"Dataset: {cfg['dataset']['type']} — {ds_loc}")
     logger.info(f"Output: {cfg['grpo']['output_dir']}")
 
     model, tokenizer = load_model(cfg)
 
-    dataset = get_dataset(cfg)
+    dataset = get_dataset(cfg, tokenizer)
     logger.info(f"Dataset loaded: {len(dataset)} samples")
 
     reward_funcs = get_reward_funcs(cfg)
@@ -60,7 +65,18 @@ def main():
     )
     logger.info(f"Memory reserved before training: {start_mem} GB")
 
-    trainer_stats = trainer.train()
+    output_dir = cfg["grpo"]["output_dir"]
+    resume_from_checkpoint = None
+    if model_loc.startswith(output_dir) and "checkpoint-" in model_loc:
+        resume_from_checkpoint = model_loc
+        logger.info(f"Smart Resume enabled: Resuming from {resume_from_checkpoint}")
+    elif os.path.exists(output_dir):
+        checkpoints = [d for d in os.listdir(output_dir) if d.startswith("checkpoint-")]
+        if checkpoints:
+            resume_from_checkpoint = True
+            logger.info("Output directory exists with checkpoints. Enabling resume.")
+
+    trainer_stats = trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     used_mem = round(torch.cuda.max_memory_reserved() / 1024**3, 3)
     runtime_min = round(trainer_stats.metrics["train_runtime"] / 60, 2)

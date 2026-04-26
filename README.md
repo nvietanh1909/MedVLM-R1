@@ -1,89 +1,40 @@
-# Medical Model Fine-Tuning Pipeline
+# Medical VLM Fine-Tuning
 
-## Setup and Installation
+This repository contains scripts and configurations for fine-tuning a medical Vision-Language Model (VLM) using Supervised Fine-Tuning (SFT) and Group Relative Policy Optimization (GRPO).
 
-Install the required libraries. If you are behind a proxy, remember to bypass it if necessary.
+## Project Structure
 
+- `configs/`: Model and training configuration files.
+- `dataset/`: Storage for downloaded datasets.
+- `models/`: Storage for downloaded pre-trained models.
+- `scripts/`: Python scripts for training, testing, and downloading resources.
+- `*.slurm`: SLURM scripts for running jobs on a cluster.
+
+## Setup
+
+1. Install requirements:
 ```bash
 pip install -r requirements.txt
 ```
 
-## The Two-Stage Training Pipeline
+2. Download all required models and datasets:
+```bash
+bash setup_all.sh
+```
+*(Downloads: Qwen3.5-2B, S-PubMedBert-MS-MARCO, DeepSeek-R1-Distill-Qwen-32B, PubMedVision, and PMC-VQA)*
 
-This project is intended to be executed on a SLURM-managed cluster across two distinct phases. 
+## Usage
 
-### Stage 1: Supervised Fine-Tuning (SFT)
-This builds the foundational capability, teaching the model to understand medical images, align vocabulary with vision, and act as a medical assistant.
+### Training (SFT)
 
-Submit the job:
+Submit the SFT job using SLURM:
 ```bash
 sbatch run_sft.slurm
 ```
-This will read from `configs/qwen3.5-2b_pubmedvision.yaml` and save the LoRA adapter to `outputs/qwen3.5-2b_pubmedvision`.
 
-### Stage 2: Reinforcement Learning (GRPO)
-After SFT completes, the model is trained to "think before speaking". It generates multiple reasoning paths, and our 5-signal reward system evaluates these paths to optimize logic and minimize hallucinations.
+### Testing (GRPO)
 
-Submit the job:
+Run inference testing on a checkpoint:
 ```bash
-sbatch run_grpo.slurm
+sbatch test_grpo.slurm
 ```
-This reads from `configs/qwen3.5-2b_pubmedvision_grpo.yaml`. The trainer automatically detects the SFT adapter to build upon it, saving the final intelligent model to `outputs/qwen3.5-2b_pubmedvision_grpo`.
-
-## Quick Testing
-
-If you want to quickly test the pipeline locally on a subset before running the full SLURM jobs, use the command line overrides:
-
-For SFT:
-```bash
-python scripts/train.py \
-    --config configs/qwen3.5-2b_pubmedvision.yaml \
-    --max_steps 50 \
-    --max_samples 1000
-```
-
-For GRPO:
-```bash
-python scripts/train_grpo.py \
-    --config configs/qwen3.5-2b_pubmedvision_grpo.yaml \
-    --max_steps 100 \
-    --max_samples 500
-```
-
-## Inference
-
-Run interactive inference using the final GRPO checkpoints. The model will stream its thought progress if requested.
-
-```bash
-python scripts/infer.py \
-    --config configs/qwen3.5-2b_pubmedvision_grpo.yaml \
-    --adapter outputs/qwen3.5-2b_pubmedvision_grpo \
-    --image /path/to/image.jpg \
-    --question "Analyze this medical image." \
-    --thinking
-```
-
-## Evaluation
-
-Evaluate accuracy on a test slice of the dataset:
-
-```bash
-python scripts/evaluate.py \
-    --config configs/qwen3.5-2b_pubmedvision_grpo.yaml \
-    --adapter outputs/qwen3.5-2b_pubmedvision_grpo \
-    --num_samples 200 \
-    --output_file eval_results.json
-```
-
-## Hardware and VRAM Guidelines
-
-Using Unsloth heavily reduces VRAM consumption. The numbers below reflect single GPU requirements for small-scale batches.
-
-| Configuration | Estimated VRAM |
-|--------|----------|
-| 4bit LoRA (r=16) SFT | ~8 GB |
-| 16bit LoRA (r=16) SFT | ~12 GB |
-| 16bit LoRA (r=64) SFT | ~14 GB |
-| 16bit LoRA GRPO (b=1, n=8) | ~20 - 40 GB (Varies by image resolution and sequence length) |
-
-For GPU clusters like H100s, max sequence lengths and completion lengths can be reliably extended in the configuration parameters without severe out-of-memory risks.
