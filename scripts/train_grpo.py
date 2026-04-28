@@ -4,6 +4,9 @@ import sys
 
 import torch
 import yaml
+import warnings
+import unsloth
+import transformers
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -21,6 +24,7 @@ def parse_args():
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--max_steps", type=int, default=None)
     parser.add_argument("--max_samples", type=int, default=None)
+    parser.add_argument("--offset", type=int, default=None)
     return parser.parse_args()
 
 
@@ -34,17 +38,21 @@ def main():
         cfg["grpo"]["max_steps"] = args.max_steps
     if args.max_samples is not None:
         cfg["dataset"]["max_samples"] = args.max_samples
+    if args.offset is not None:
+        cfg["dataset"]["offset"] = args.offset
 
     cfg["grpo"]["learning_rate"] = float(cfg["grpo"]["learning_rate"])
 
     logger.info(f"Config: {args.config}")
-    logger.info(f"Model: {cfg['model']['model_path']}")
-    logger.info(f"Dataset: {cfg['dataset']['type']} — {cfg['dataset']['json_file']}")
+    model_loc = cfg['model'].get('path', cfg['model'].get('model_path', 'unknown'))
+    logger.info(f"Model: {model_loc}")
+    ds_loc = cfg['dataset'].get('path', cfg['dataset'].get('json_file', 'unknown'))
+    logger.info(f"Dataset: {cfg['dataset']['type']} — {ds_loc}")
     logger.info(f"Output: {cfg['grpo']['output_dir']}")
 
     model, tokenizer = load_model(cfg)
 
-    dataset = get_dataset(cfg)
+    dataset = get_dataset(cfg, tokenizer)
     logger.info(f"Dataset loaded: {len(dataset)} samples")
 
     reward_funcs = get_reward_funcs(cfg)
@@ -60,7 +68,29 @@ def main():
     )
     logger.info(f"Memory reserved before training: {start_mem} GB")
 
-    trainer_stats = trainer.train()
+    warnings.filterwarnings("ignore", message=".*Kwargs passed to `processor.__call__`.*")
+    warnings.filterwarnings("ignore", message=".*max_new_tokens.*and.*max_length.*")
+
+    if hasattr(model, "generation_config"):
+        model.generation_config.max_length = None
+
+    output_dir = cfg["grpo"]["output_dir"]
+    resume_from_checkpoint = None
+    
+    checkpoints = []
+    if os.path.exists(output_dir):
+        checkpoints = [d for d in os.listdir(output_dir) if d.startswith("checkpoint-")]
+        checkpoints.sort(key=lambda x: int(x.split("-")[1]))
+
+    if checkpoints:
+        latest_checkpoint = os.path.join(output_dir, checkpoints[-1])
+        resume_from_checkpoint = latest_checkpoint
+        logger.info(f"Auto-resume enabled: Found latest checkpoint at {latest_checkpoint}")
+    elif model_loc.startswith(output_dir) and "checkpoint-" in model_loc:
+        resume_from_checkpoint = model_loc
+        logger.info(f"Smart Resume enabled: Resuming from {resume_from_checkpoint}")
+
+    trainer_stats = trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     used_mem = round(torch.cuda.max_memory_reserved() / 1024**3, 3)
     runtime_min = round(trainer_stats.metrics["train_runtime"] / 60, 2)

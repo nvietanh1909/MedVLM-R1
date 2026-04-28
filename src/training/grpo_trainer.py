@@ -18,6 +18,8 @@ def build_grpo_trainer(model, tokenizer, dataset, reward_funcs, cfg):
         max_prompt_length=grpo_cfg["max_prompt_length"],
         max_completion_length=grpo_cfg["max_completion_length"],
         beta=float(grpo_cfg.get("beta", 0.001)),
+        temperature=float(grpo_cfg.get("temperature", 0.7)),
+        top_p=float(grpo_cfg.get("top_p", 0.95)),
         per_device_train_batch_size=grpo_cfg["per_device_train_batch_size"],
         gradient_accumulation_steps=grpo_cfg["gradient_accumulation_steps"],
         num_train_epochs=grpo_cfg.get("num_train_epochs", 1),
@@ -32,6 +34,7 @@ def build_grpo_trainer(model, tokenizer, dataset, reward_funcs, cfg):
         fp16=grpo_cfg.get("fp16", False),
         seed=grpo_cfg.get("seed", 3407),
         report_to=grpo_cfg.get("report_to", "none"),
+        reward_weights=grpo_cfg.get("reward_weights", None),
     )
 
     trainer = GRPOTrainer(
