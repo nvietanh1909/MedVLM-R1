@@ -9,4 +9,3 @@ echo "2. Downloading Models..."
 bash scripts/download_model.sh
 
 echo "3. Setup Complete!"
-    
